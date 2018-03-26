@@ -13,7 +13,7 @@ This dataset is a subset(10,000 videos) of the dataset(approximate 300,000 video
 4. user_details.txt:<userid>::::<total loop count of the user>::::<follower count of the user>::::<following count of the user>::::<like count of the user>::::<post count of the user>::::<twitter verified flag>::::<description of the user>::::<location of the user>::::<username of the user>
 5. ground_truth.txt:<videoid>::::<number of loops>::::<number of likes>::::<number of reposts>::::<number of comments>::::<created time>
 6. histogram_feature.npz: compressed numpy file, use numpy.load to load, is a 2-D array: (n, m), n is the number of samples; m is the dimension of histogram feature vector; here n=10000, m=50
-7. imageNet_feature.npz: compressed numpy file, use numpy.load to load, is a 2-D array: (n, m), n is the n umber of samples; m is the dimension of imageNet feature vector; here n=10000, m=1000
+7. imageNet_feature.npz: compressed numpy file, use numpy.load to load, is a 2-D array: (n, m), n is the number of samples; m is the dimension of imageNet feature vector; here n=10000, m=1000
 8. text_sentence2vec_feature.npz: compressed numpy file, use numpy.load to load, is a 2-D array: (n, m), n is the number of samples; m is the dimension of sentence2vec feature vector; here n=10000, m=100
 9. visual_senti_feature.npz: compressed numpy file, use numpy.load to load, is a 2-D array: (n, m), n is the number of samples; m is the dimension of visual sentiment feature vector; here n=10000, m=2059
 

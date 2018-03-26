@@ -61,37 +61,45 @@ def main():
     social_feature = load_social_features(data_dir + 'video_id.txt', data_dir + 'video_user.txt', data_dir + 'user_details.txt')
     
     # feature dimension reduction: it's up to you to decide the size of reduced dimensions; the main purpose is to reduce the computation complexity
+    pca = PCA(n_components=20)
+    hist_feature = pca.fit_transform(hist_feature)
     # 20, 40, 10
     pca = PCA(n_components=10)
     imgNet_feature = pca.fit_transform(imgNet_feature)
-    pca = PCA(n_components=40)
+    pca = PCA(n_components=20)
     vSenti_feature = pca.fit_transform(vSenti_feature)
     pca = PCA(n_components=10)
     sen2vec_feature = pca.fit_transform(sen2vec_feature)
     
     # contatenate all the features(after dimension reduction)
-    # concat_feature = np.concatenate([hist_feature, imgNet_feature, vSenti_feature, sen2vec_feature, social_feature], axis=1) 
-    concat_feature = np.concatenate([imgNet_feature, social_feature], axis=1) 
+    concat_feature = np.concatenate([hist_feature, imgNet_feature, vSenti_feature, sen2vec_feature], axis=1) 
+    # concat_feature = np.concatenate([imgNet_feature, social_feature], axis=1)
+    # concat_feature = np.concatenate([social_feature], axis=1)
     print("The input data dimension is: (%d, %d)" %(concat_feature.shape))
     
     # load ground-truth
     ground_truth = []
     for line in open(os.path.join(data_dir, 'ground_truth.txt')):
-        #you can use more than one popularity index as ground-truth and average the results; for each video we have four indexes: number of loops(view), likes, reposts, and comments; the first one(loops) is compulsory.
-        ground_truth.append(float(line.strip().split('::::')[0]))
+        loop_count = float(line.strip().split('::::')[0])
+        like_count = float(line.strip().split('::::')[1])
+        repost_count = float(line.strip().split('::::')[2])
+        comment_count = float(line.strip().split('::::')[3])
+        ground_truth.append((loop_count + like_count + repost_count + comment_count) / 4)
     ground_truth = np.array(ground_truth, dtype=np.float32)
     
-    # print("Start tuning model parameters...")
+    print("Start tuning model parameters...")
 
-    # print(svc_param_selection(concat_feature, ground_truth, 10))
+    print(svc_param_selection(concat_feature, ground_truth, 10))
 
     print("Start training and predict...")
     kf = KFold(n_splits=10)
     nMSEs = []
+    pop_predicts = np.empty([0, 1])
+
     for train, test in kf.split(concat_feature):
         # model initialize: you can tune the parameters within SVR(http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html); Or you can select other regression models
-        # model = SVR(kernel='rbf', C=50000, gamma = 0.0001, epsilon = 0.01)
-        model = SVR(kernel='rbf', C=500000, gamma = 0.0001, epsilon = 0.01)
+        model = SVR(kernel='rbf', C=75000, gamma = 0.0001, epsilon = 0.01)
+        # model = SVR()
         # model = GradientBoostingRegressor(max_depth=10, n_estimators=200, learning_rate=0.1, random_state=42)
         # train
         model.fit(concat_feature[train], ground_truth[train])
@@ -100,11 +108,11 @@ def main():
         # nMSE(normalized Mean Squared Error) metric calculation
         nMSE = mean_squared_error(ground_truth[test], predicts) / np.mean(np.square(ground_truth[test]))
         nMSEs.append(nMSE)
-    
+        pop_predicts = np.concatenate((pop_predicts, [[predict] for predict in predicts]))
         print("This round of nMSE is: %f" %(nMSE))
     
     print('Average nMSE is %f.' %(np.mean(nMSEs)))
-
+    return pop_predicts
 
 if __name__ == "__main__":
     main()
